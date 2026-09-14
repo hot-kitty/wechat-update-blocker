@@ -22,7 +22,7 @@
 
 ## 使用方式
 
-下载 [wechat-update-blocke](./release/wechat-update-blocker.zip) 解压得到exe
+下载 release or 自行编译 [wechat-update-blocke](https://github.com/hot-kitty/wechat-update-blocker/releases/download/v1.0.0/wechat-update-blocker.zip)
 
 1. 以管理员权限运行 `dist\wechat-update-blocker.exe`。
 2. 确认检测到的微信安装目录与防护对象；如未找到安装目录，点击“浏览...”手动选择包含 `WeChat.exe` 或 `Weixin.exe` 的目录。
