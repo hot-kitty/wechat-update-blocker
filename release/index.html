@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="微信更新屏蔽工具：锁定更新器、xwechat 插件目录与更新替换目录。">
+  <link rel="icon" href="wechat-update-blocker.ico" sizes="any">
+  <title>微信更新屏蔽工具 · Windows 更新防护</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@600;700;900&display=swap');
+
+    :root {
+      --ink: #0d1d2d;
+      --blue: #0067b1;
+      --blue-deep: #004a82;
+      --paper: #f4f1e9;
+      --warm: #e9e3d7;
+      --red: #cc3035;
+      --line: #b8c4cb;
+      --mono: "IBM Plex Mono", Consolas, monospace;
+      --display: "Noto Serif SC", "Microsoft YaHei", serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: var(--mono);
+      line-height: 1.65;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .28;
+      background-image: radial-gradient(#71818b 0.6px, transparent .6px);
+      background-size: 6px 6px;
+    }
+    a { color: inherit; }
+    .wrap { width: min(1120px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topline { height: 8px; background: var(--red); }
+    nav {
+      min-height: 78px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 600; text-decoration: none; }
+    .brand-mark { display: grid; place-items: center; width: 32px; height: 32px; overflow: hidden; background: white; border: 1px solid rgba(13,29,45,.22); }
+    .brand-mark img { display: block; width: 28px; height: 28px; object-fit: contain; }
+    .nav-meta { color: #5b6870; font-size: 12px; letter-spacing: .08em; }
+
+    .hero { padding: 72px 0 82px; display: grid; grid-template-columns: 1fr .95fr; gap: 60px; align-items: center; }
+    .eyebrow { margin: 0 0 18px; color: var(--red); font-size: 12px; font-weight: 600; letter-spacing: .14em; }
+    h1, h2, h3 { font-family: var(--display); line-height: 1.15; }
+    .hero-icon { display: block; width: 58px; height: 58px; margin: 0 0 20px; filter: drop-shadow(3px 3px 0 rgba(13,29,45,.15)); }
+    h1 { margin: 0; max-width: 620px; font-size: clamp(40px, 5.2vw, 72px); letter-spacing: -.06em; }
+    h1 em { font-style: normal; color: var(--blue); }
+    .lead { max-width: 570px; margin: 25px 0 32px; font-size: 16px; color: #344553; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 20px; border: 1px solid var(--ink); font-weight: 600; text-decoration: none; transition: transform .18s ease, box-shadow .18s ease; }
+    .button:hover { transform: translate(-3px, -3px); box-shadow: 4px 4px 0 var(--ink); }
+    .button.primary { color: white; border-color: var(--blue); background: var(--blue); }
+    .button.secondary { background: transparent; }
+    .note { margin-top: 17px; color: #68757c; font-size: 11px; }
+
+    .shot-wrap { position: relative; padding: 16px 0 0 16px; }
+    .shot-wrap::before { content: ""; position: absolute; inset: 0 16px 16px 0; background: var(--blue); }
+    .shot-wrap::after { content: "SCREEN / 01"; position: absolute; right: -4px; top: -24px; color: var(--red); font-size: 11px; font-weight: 600; letter-spacing: .12em; }
+    .shot { position: relative; display: block; width: 100%; border: 1px solid var(--ink); box-shadow: 10px 10px 0 rgba(13, 29, 45, .13); }
+
+    .ticker { overflow: hidden; color: white; background: var(--ink); border-block: 1px solid var(--ink); }
+    .ticker-inner { display: flex; width: max-content; padding: 11px 0; gap: 28px; font-size: 12px; font-weight: 600; letter-spacing: .09em; animation: crawl 28s linear infinite; }
+    .ticker b { color: #7ecbff; }
+    @keyframes crawl { to { transform: translateX(-25%); } }
+
+    section { padding: 88px 0; }
+    .section-head { display: grid; grid-template-columns: 210px 1fr; gap: 30px; margin-bottom: 37px; }
+    .section-number { color: var(--red); font-size: 12px; font-weight: 600; letter-spacing: .13em; }
+    h2 { margin: 0; font-size: clamp(29px, 3.8vw, 48px); letter-spacing: -.045em; }
+    .section-head p { max-width: 600px; margin: 14px 0 0; color: #52626d; }
+
+    .problem { background: var(--warm); border-block: 1px solid var(--line); }
+    .chain { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+    .chain article { min-height: 215px; padding: 25px; background: var(--paper); }
+    .chain .step { color: var(--red); font-size: 12px; font-weight: 600; }
+    .chain h3 { margin: 27px 0 10px; font-size: 24px; }
+    .chain p { margin: 0; color: #52626d; font-size: 13px; }
+    code { padding: 1px 5px; color: #034f88; background: #dbeaf2; font-family: var(--mono); font-size: .88em; overflow-wrap: anywhere; }
+
+    .defense-grid { display: grid; grid-template-columns: 1.1fr .9fr; gap: 30px; align-items: start; }
+    .rule-list { border-top: 3px solid var(--ink); }
+    .rule { display: grid; grid-template-columns: 42px 1fr; gap: 17px; padding: 23px 4px; border-bottom: 1px solid var(--line); }
+    .rule-num { color: var(--red); font-weight: 600; }
+    .rule h3 { margin: 0 0 7px; font-size: 21px; }
+    .rule p { margin: 0; color: #52626d; font-size: 13px; }
+    .path-card { padding: 29px; color: #eaf4fb; background: var(--blue-deep); border: 1px solid var(--ink); }
+    .path-card .caption { margin: 0 0 20px; color: #a8d8f5; font-size: 11px; letter-spacing: .12em; }
+    .path { position: relative; margin: 10px 0; padding: 13px 42px 13px 13px; background: rgba(255,255,255,.08); border-left: 3px solid #79c9f5; font-size: 12px; overflow-wrap: anywhere; }
+    .copy { position: absolute; top: 7px; right: 7px; width: 27px; height: 27px; color: #d9effc; border: 1px solid #79c9f5; background: transparent; cursor: pointer; }
+    .copy:hover { color: var(--blue-deep); background: #79c9f5; }
+    .path-card small { display: block; margin-top: 19px; color: #b8d9ed; line-height: 1.7; }
+
+    .proof { background: var(--warm); border-block: 1px solid var(--line); }
+    .proof-grid { display: grid; grid-template-columns: 1.32fr 1fr; gap: 25px; align-items: start; }
+    .proof-card { margin: 0; background: var(--ink); border: 1px solid var(--ink); box-shadow: 7px 7px 0 rgba(13,29,45,.14); }
+    .proof-card:nth-child(2) { margin-top: 45px; }
+    .proof-card img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: center; }
+    .proof-card figcaption { padding: 16px 18px 17px; color: #e9f4fb; font-size: 12px; }
+    .proof-card figcaption b { display: block; margin-bottom: 5px; color: #7ecbff; font-size: 11px; letter-spacing: .1em; }
+
+    .usage { color: #eef7fc; background: var(--ink); }
+    .usage .section-number { color: #ff8b88; }
+    .usage h2 { color: white; }
+    .usage .section-head p { color: #b7c8d4; }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+    .usage-step { padding-top: 17px; border-top: 2px solid #4c6271; }
+    .usage-step strong { display: block; margin-bottom: 14px; color: #7ecbff; font-size: 26px; }
+    .usage-step h3 { margin: 0 0 9px; color: white; font-size: 22px; }
+    .usage-step p { margin: 0; color: #b7c8d4; font-size: 13px; }
+
+    .closing { padding: 74px 0; text-align: center; }
+    .closing h2 { max-width: 660px; margin: 0 auto 18px; }
+    .closing p { max-width: 580px; margin: 0 auto; color: #52626d; }
+    footer { display: none; }
+
+    @media (max-width: 760px) {
+      .wrap { width: min(100% - 28px, 1120px); }
+      nav { min-height: 62px; }
+      .nav-meta { display: none; }
+      .hero { padding: 48px 0 60px; grid-template-columns: 1fr; gap: 48px; }
+      .shot-wrap { width: min(520px, calc(100% - 16px)); margin: 0 auto; }
+      section { padding: 62px 0; }
+      .section-head { grid-template-columns: 1fr; gap: 12px; margin-bottom: 28px; }
+      .chain, .steps, .defense-grid, .proof-grid { grid-template-columns: 1fr; }
+      .chain article { min-height: 0; }
+      .proof-card:nth-child(2) { margin-top: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) { .ticker-inner { animation: none; } .button { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="topline"></div>
+  <nav class="wrap" aria-label="站点导航">
+    <a class="brand" href="#top"><span class="brand-mark"><img src="wechat-update-blocker.ico" alt=""></span><span>微信更新屏蔽工具</span></a>
+    <span class="nav-meta">WINDOWS UTILITY / V1.3.0</span>
+  </nav>
+
+  <main id="top">
+    <div class="wrap hero">
+      <div>
+        <p class="eyebrow">UPDATE CONTROL FOR WECHAT</p>
+        <img class="hero-icon" src="wechat-update-blocker.ico" alt="微信更新屏蔽工具图标">
+        <h1>不让更新，<br><em>偷偷发生。</em></h1>
+        <p class="lead">一款面向微信 4.x / xwechat 的 Windows 小工具。它不只拦住当前更新器，还锁定更新文件未来会被释放、写入和替换的位置。</p>
+        <div class="actions">
+          <a class="button primary" href="#how">查看工作方式 ↓</a>
+          <a class="button secondary" href="需求.md">阅读技术说明</a>
+        </div>
+        <p class="note">需以管理员权限运行 · 单文件 EXE · 可随时恢复更新</p>
+      </div>
+      <div class="shot-wrap">
+        <img class="shot" src="img/sc_2026-09-14_16-14-45.png" alt="微信更新屏蔽工具界面截图：自动更新已屏蔽">
+      </div>
+    </div>
+
+    <div class="ticker" aria-hidden="true"><div class="ticker-inner">
+      <span><b>●</b> 检测更新器</span><span><b>●</b> 锁定插件目录</span><span><b>●</b> 阻止替换程序</span><span><b>●</b> 禁用计划任务</span>
+      <span><b>●</b> 检测更新器</span><span><b>●</b> 锁定插件目录</span><span><b>●</b> 阻止替换程序</span><span><b>●</b> 禁用计划任务</span>
+    </div></div>
+
+    <section class="problem">
+      <div class="wrap">
+        <div class="section-head"><div class="section-number">01 / THE GAP</div><div><h2>只锁住 EXE，<br>还不够。</h2><p>xwechat 可以把新的更新程序解压到插件目录，再将其写入 <code>update</code> 目录完成替换。针对某一个既有文件的“禁止执行”规则，无法覆盖这条新路径。</p></div></div>
+        <div class="chain">
+          <article><div class="step">01</div><h3>释放</h3><p>微信将 <code>WeixinUpdate.exe</code> 释放到插件的 <code>extracted</code> 子目录。</p></article>
+          <article><div class="step">02</div><h3>替换</h3><p>更新组件将新程序写入 xwechat 的 <code>update</code> 目录，绕开旧文件 ACL。</p></article>
+          <article><div class="step">03</div><h3>锁住链路</h3><p>本工具将拦截点上移到目录层级，让未来新文件也自动受限。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <div class="wrap">
+        <div class="section-head"><div class="section-number">02 / DEFENSE</div><div><h2>从“文件”到“路径”的防护。</h2><p>选择“屏蔽更新”后，工具执行可回滚的 ACL 和计划任务操作。所有状态直接读取系统 ACL，而非只记录一次点击结果。</p></div></div>
+        <div class="defense-grid">
+          <div class="rule-list">
+            <article class="rule"><div class="rule-num">01</div><div><h3>结束当前更新进程</h3><p>先关闭正在运行的更新器，避免文件被占用或继续执行。</p></div></article>
+            <article class="rule"><div class="rule-num">02</div><div><h3>阻止已有更新器执行</h3><p>对检测到的更新 EXE 拒绝 Users 组执行权限，兼容自定义安装目录与微信 4.x 版本目录。</p></div></article>
+            <article class="rule"><div class="rule-num">03</div><div><h3>锁定未来的释放与替换</h3><p>目录规则继承到后续创建的文件，阻止写入、新建、删除、覆盖和执行。</p></div></article>
+            <article class="rule"><div class="rule-num">04</div><div><h3>禁用更新计划任务</h3><p>禁用而不删除，选择“允许更新”后即可重新启用，完整回滚。</p></div></article>
+          </div>
+          <aside class="path-card">
+            <p class="caption">LOCKED TARGETS / %APPDATA%</p>
+            <div class="path" data-path="%APPDATA%\Tencent\xwechat\XPlugin\Plugins\WeixinUpdate"><span>%APPDATA%\Tencent\xwechat\XPlugin\Plugins\WeixinUpdate</span><button class="copy" type="button" aria-label="复制插件目录" title="复制路径">⧉</button></div>
+            <div class="path" data-path="%APPDATA%\Tencent\xwechat\update"><span>%APPDATA%\Tencent\xwechat\update</span><button class="copy" type="button" aria-label="复制更新目录" title="复制路径">⧉</button></div>
+            <small>若 xwechat 根目录已经存在而目标目录尚未建立，点击屏蔽时工具会先创建并锁定对应目录。</small>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="proof">
+      <div class="wrap">
+        <div class="section-head"><div class="section-number">03 / PROOF</div><div><h2>看得见的拦截结果。</h2><p>防护生效后，更新器无法再被直接启动；微信的更新尝试也不会绕过已锁定的更新路径。</p></div></div>
+        <div class="proof-grid">
+          <figure class="proof-card">
+            <img src="img/001.png" alt="Windows 提示无法访问 WeixinUpdate.exe，说明更新器已被拦截">
+            <figcaption><b>DIRECT EXECUTION / BLOCKED</b>直接启动 WeixinUpdate.exe 时，Windows 拒绝访问该文件。</figcaption>
+          </figure>
+          <figure class="proof-card">
+            <img src="img/002.png" alt="微信新版本更新窗口正在下载">
+            <figcaption><b>IN-APP UPDATE / OBSERVED</b>微信内置的更新流程仍可被观察，但更新路径已受到目录级 ACL 防护。</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="usage">
+      <div class="wrap">
+        <div class="section-head"><div class="section-number">04 / USE</div><div><h2>三步完成防护。</h2><p>没有后台驻留，没有不可逆删除。需要更新时，按相反方向恢复即可。</p></div></div>
+        <div class="steps">
+          <article class="usage-step"><strong>01</strong><h3>管理员运行</h3><p>双击 EXE 并确认 UAC 授权。工具需要修改 ACL 与计划任务。</p></article>
+          <article class="usage-step"><strong>02</strong><h3>确认检测结果</h3><p>检查安装目录与防护对象；找不到安装目录时可手动浏览选择。</p></article>
+          <article class="usage-step"><strong>03</strong><h3>应用设置</h3><p>选择“屏蔽更新”后点击应用。需要更新时改为“允许更新”并再次应用。</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <div class="wrap">
+        <p class="eyebrow">ONE FILE. REVERSIBLE.</p>
+        <h2>把更新的决定权，留在自己手里。</h2>
+        <p>这是一款本地 Windows 工具介绍页。程序图标与状态图标都已内嵌；状态图标仅会在运行时临时释放，无需随文件分发。</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('.copy').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var path = button.parentElement.getAttribute('data-path');
+        function done() {
+          button.textContent = '✓';
+          setTimeout(function () { button.textContent = '⧉'; }, 1300);
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(path).then(done);
+        } else {
+          var helper = document.createElement('textarea');
+          helper.value = path;
+          helper.style.position = 'fixed';
+          helper.style.opacity = '0';
+          document.body.appendChild(helper);
+          helper.select();
+          document.execCommand('copy');
+          helper.remove();
+          done();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
