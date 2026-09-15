@@ -91,13 +91,17 @@ Global Const $CLR_RED    = 0xC42B1C
 Global Const $CLR_TEXT   = 0x202020
 Global Const $CLR_GRAY   = 0x707070
 Global Const $CLR_FONT   = "Microsoft YaHei UI"
+Global Const $CLR_BTN_IDLE   = 0xFFFFFF
+Global Const $CLR_BTN_ACTIVE = 0xDCEEFF
+Global Const $CLR_BTN_BLOCK  = 0xFFE2E2
+Global Const $CLR_BTN_ALLOW  = 0xDCF4DF
 
 ; ─── GUI 控件 ──────────────────────────────────────────────
 Global $hGUI = 0
-Global $idRadioAllow, $idRadioBlock, $idChkTask
+Global $idBtnAllow, $idBtnBlock, $idChkTask
 Global $idInpDir, $idBtnBrowse
 Global $idLblUpdater, $idIconState, $idLblState
-Global $idBtnApply, $idBtnRescan
+Global $idBtnRescan
 
 ; ─── 运行时状态 ────────────────────────────────────────────
 Global $g_aUpdaters[0]   ; 扫描到的更新程序完整路径
@@ -126,8 +130,12 @@ While 1
         Case $idBtnRescan
             _Rescan()
 
-        Case $idBtnApply
-            _DoApply()
+        ; 两个策略按钮直接执行对应操作，不依赖单选框状态。
+        Case $idBtnBlock
+            _DoApply(True)
+
+        Case $idBtnAllow
+            _DoApply(False)
     EndSwitch
 WEnd
 
@@ -160,49 +168,45 @@ Func _CreateGUI()
     GUICtrlCreateLabel("更新策略", 20, 112, 160, 18)
     GUICtrlSetFont(-1, 9, 700, 0, $CLR_FONT)
     GUICtrlSetColor(-1, $CLR_ACCENT)
-    GUICtrlCreateLabel("", 20, 136, 400, 54)
-    GUICtrlSetBkColor(-1, $CLR_PANEL)
+    ; 不使用覆盖整个卡片的静态背景控件：部分 Windows 主题会让该控件吞掉鼠标点击。
+    ; 策略按钮直接放在 GUI 背景上，保证始终能接收点击事件。
 
-    $idRadioAllow = GUICtrlCreateRadio("允许更新", 40, 153, 88, 20)
-    GUICtrlSetColor($idRadioAllow, $CLR_TEXT)
-    GUICtrlSetBkColor($idRadioAllow, $CLR_PANEL)
+    $idBtnBlock = GUICtrlCreateButton("屏蔽更新", 40, 148, 130, 27)
+    GUICtrlSetFont($idBtnBlock, 9, 700, 0, $CLR_FONT)
+    GUICtrlSetBkColor($idBtnBlock, $CLR_BTN_ACTIVE)
 
-    $idRadioBlock = GUICtrlCreateRadio("屏蔽更新", 145, 153, 88, 20)
-    GUICtrlSetColor($idRadioBlock, $CLR_TEXT)
-    GUICtrlSetBkColor($idRadioBlock, $CLR_PANEL)
-    GUICtrlSetState($idRadioBlock, $GUI_CHECKED)
+    $idBtnAllow = GUICtrlCreateButton("允许更新", 190, 148, 130, 27)
+    GUICtrlSetFont($idBtnAllow, 9, 700, 0, $CLR_FONT)
+    GUICtrlSetBkColor($idBtnAllow, $CLR_BTN_IDLE)
 
-    $idChkTask = GUICtrlCreateCheckbox("禁用更新计划任务", 250, 153, 144, 20)
+    $idChkTask = GUICtrlCreateCheckbox("同时禁用更新计划任务", 40, 181, 190, 20)
     GUICtrlSetColor($idChkTask, $CLR_TEXT)
     GUICtrlSetBkColor($idChkTask, $CLR_PANEL)
     GUICtrlSetState($idChkTask, $GUI_CHECKED)
 
     ; ── 安装目录 ──
-    GUICtrlCreateLabel("微信安装目录", 20, 210, 200, 18)
+    GUICtrlCreateLabel("微信安装目录", 20, 230, 200, 18)
     GUICtrlSetFont(-1, 9, 700, 0, $CLR_FONT)
     GUICtrlSetColor(-1, $CLR_ACCENT)
 
-    $idInpDir = GUICtrlCreateInput("", 20, 235, 302, 28)
+    $idInpDir = GUICtrlCreateInput("", 20, 255, 302, 28)
     GUICtrlSetFont($idInpDir, 9, 400, 0, $CLR_FONT)
     GUICtrlSetBkColor($idInpDir, $CLR_PANEL)
 
-    $idBtnBrowse = GUICtrlCreateButton("浏览...", 332, 235, 88, 28)
+    $idBtnBrowse = GUICtrlCreateButton("浏览...", 332, 255, 88, 28)
 
     ; ── 防护对象 ──
-    GUICtrlCreateLabel("已检测到的防护对象", 20, 284, 240, 18)
+    GUICtrlCreateLabel("已检测到的防护对象", 20, 304, 240, 18)
     GUICtrlSetFont(-1, 9, 700, 0, $CLR_FONT)
     GUICtrlSetColor(-1, $CLR_ACCENT)
 
-    $idLblUpdater = GUICtrlCreateLabel("", 20, 309, 400, 68)
+    $idLblUpdater = GUICtrlCreateLabel("", 20, 329, 400, 55)
     GUICtrlSetFont($idLblUpdater, 8, 400, 0, $CLR_FONT)
     GUICtrlSetColor($idLblUpdater, $CLR_TEXT)
     GUICtrlSetBkColor($idLblUpdater, $CLR_PANEL)
 
-    ; ── 底部操作（整体居中） ──
-    $idBtnApply = GUICtrlCreateButton("应用设置", 84, 396, 130, 30)
-    GUICtrlSetFont($idBtnApply, 9, 700, 0, $CLR_FONT)
-
-    $idBtnRescan = GUICtrlCreateButton("重新检测", 226, 396, 130, 30)
+    ; ── 底部操作 ──
+    $idBtnRescan = GUICtrlCreateButton("重新检测", 155, 400, 130, 30)
 
     GUISetState(@SW_SHOW, $hGUI)
 EndFunc
@@ -356,6 +360,8 @@ Func _RefreshState()
         GUICtrlSetImage($idIconState, $ICON_ALLOW, -1)
         GUICtrlSetData($idLblState, "未找到微信更新程序")
         GUICtrlSetColor($idLblState, 0xDCEEFF)
+        GUICtrlSetBkColor($idBtnBlock, $CLR_BTN_ACTIVE)
+        GUICtrlSetBkColor($idBtnAllow, $CLR_BTN_IDLE)
         Return
     EndIf
 
@@ -379,12 +385,14 @@ Func _RefreshState()
         GUICtrlSetImage($idIconState, $ICON_BLOCK, -1)
         GUICtrlSetData($idLblState, "自动更新已屏蔽")
         GUICtrlSetColor($idLblState, 0xFFE2E2)
-        GUICtrlSetState($idRadioBlock, $GUI_CHECKED)
+        GUICtrlSetBkColor($idBtnBlock, $CLR_BTN_BLOCK)
+        GUICtrlSetBkColor($idBtnAllow, $CLR_BTN_IDLE)
     Else
         GUICtrlSetImage($idIconState, $ICON_ALLOW, -1)
         GUICtrlSetData($idLblState, "自动更新已启用")
         GUICtrlSetColor($idLblState, 0xD8F5D8)
-        GUICtrlSetState($idRadioAllow, $GUI_CHECKED)
+        GUICtrlSetBkColor($idBtnBlock, $CLR_BTN_IDLE)
+        GUICtrlSetBkColor($idBtnAllow, $CLR_BTN_ALLOW)
     EndIf
 EndFunc
 
@@ -398,8 +406,7 @@ EndFunc
 ; ============================================================
 ;  应用（屏蔽 / 恢复）
 ; ============================================================
-Func _DoApply()
-    Local $bBlock = (GUICtrlRead($idRadioBlock) = $GUI_CHECKED)
+Func _DoApply($bBlock)
     Local $bTask = (GUICtrlRead($idChkTask) = $GUI_CHECKED)
 
     ; 即使更新目录尚未被微信创建，也预先建立并锁定它，避免首次释放绕过防护。
@@ -440,7 +447,8 @@ Func _DoApply()
     Local $sTitle = $bBlock ? "确认屏蔽" : "确认恢复"
     If MsgBox($MB_ICONWARNING + $MB_YESNO, $sTitle, $sMsg) <> $IDYES Then Return
 
-    GUICtrlSetState($idBtnApply, $GUI_DISABLE)
+    GUICtrlSetState($idBtnBlock, $GUI_DISABLE)
+    GUICtrlSetState($idBtnAllow, $GUI_DISABLE)
     GUICtrlSetState($idBtnRescan, $GUI_DISABLE)
 
     Local $iOk = 0, $iFail = 0, $sDetail = ""
@@ -503,7 +511,8 @@ Func _DoApply()
         If $bTask Then $sDetail &= _TaskDetail(True)
     EndIf
 
-    GUICtrlSetState($idBtnApply, $GUI_ENABLE)
+    GUICtrlSetState($idBtnBlock, $GUI_ENABLE)
+    GUICtrlSetState($idBtnAllow, $GUI_ENABLE)
     GUICtrlSetState($idBtnRescan, $GUI_ENABLE)
 
     Local $sResult = ($bBlock ? "屏蔽" : "恢复") & "完成：" & $iOk & " 个成功"
