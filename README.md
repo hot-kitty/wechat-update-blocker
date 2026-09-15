@@ -28,16 +28,30 @@
 
 ## 使用方式
 
+下载旧版微信安装包，直接点击覆盖安装，找不到可以参考 [旧版本微信怎么下载？](https://github.com/hot-kitty/wechat-update-blocker/issues/1)
+
+
+<img width="1153" height="455" alt="image" src="https://github.com/user-attachments/assets/6dffb36a-c8c5-466e-bdb5-636073f7c759" />
+
+
 下载 release or 自行编译 [wechat-update-blocke](https://github.com/hot-kitty/wechat-update-blocker/releases/download/v1.0.0/wechat-update-blocker.zip)
 
 1. 以管理员权限运行 `dist\wechat-update-blocker.exe`。
 2. 确认检测到的微信安装目录与防护对象；如未找到安装目录，点击“浏览...”手动选择包含 `WeChat.exe` 或 `Weixin.exe` 的目录。
-3. 选择“屏蔽更新”，并点击“应用设置”。
-4. 需要升级微信时，选择“允许更新”，点击“应用设置”，再从微信内完成更新。
+3. 选择“屏蔽更新”，并点击“确认”。
+4. 需要升级微信时，选择“允许更新”，
+
+   <img width="1519" height="810" alt="image" src="https://github.com/user-attachments/assets/67218b88-7782-4b60-bd60-90e4cb26c44b" />
+
 
 工具会直接读取系统 ACL 判断状态，而不是只记录本次点击结果。
 
-![实际拦截结果](img/006.png)
+ **实际拦截结果 :**
+
+
+<img width="1110" height="1172" alt="image" src="https://github.com/user-attachments/assets/d680cf46-9364-4d24-b6de-af1b1d65849e" />
+
+
 
 ## 编译
 
